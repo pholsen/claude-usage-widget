@@ -1,5 +1,5 @@
 ﻿; Inno Setup script: packs the PyInstaller build (dist\Claude Usage) into ClaudeUsage-Setup-<version>.exe
-; Build: iscc /DMyAppVersion=1.0.0 installer\windows.iss
+; Build: iscc /DMyAppVersion=1.0.0 packaging\windows.iss
 ; Installs per user (no admin prompt) into %LOCALAPPDATA%\Programs\Claude Usage.
 
 #define MyAppName "Claude Usage"
@@ -17,6 +17,7 @@ AppPublisher=pholsen
 AppPublisherURL=https://github.com/pholsen/claude-usage-widget
 AppSupportURL=https://github.com/pholsen/claude-usage-widget/issues
 DefaultDirName={autopf}\{#MyAppName}
+DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 DisableDirPage=yes
 PrivilegesRequired=lowest
@@ -49,7 +50,9 @@ Name: "startup"; Description: "{cm:AutoStart}"; GroupDescription: "{cm:Additiona
 Source: "..\dist\Claude Usage\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExe}"
+; Start menu folder "Claude Usage" with the app and its uninstaller
+Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExe}"
+Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExe}"; Tasks: desktopicon
 Name: "{userstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppExe}"; Tasks: startup
 

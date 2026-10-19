@@ -28,13 +28,13 @@ jobs:
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then v="${GITHUB_REF_NAME#v}"; else v="0.0.0-dev"; fi
           echo "APP_VERSION=$v" >> "$GITHUB_ENV"
       - run: pip install ${{ env.PYINSTALLER }}
-      - run: pyinstaller --noconfirm claude_usage.spec
+      - run: pyinstaller --noconfirm packaging/claude_usage.spec
       - name: Installer
         shell: pwsh
         run: |
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress; }
-          & $iscc "/DMyAppVersion=$env:APP_VERSION" installer\windows.iss
+          & $iscc "/DMyAppVersion=$env:APP_VERSION" packaging\windows.iss
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v5
         with:
@@ -60,7 +60,7 @@ jobs:
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then v="${GITHUB_REF_NAME#v}"; else v="0.0.0-dev"; fi
           echo "APP_VERSION=$v" >> "$GITHUB_ENV"
       - run: pip install ${{ env.PYINSTALLER }}
-      - run: pyinstaller --noconfirm claude_usage.spec
+      - run: pyinstaller --noconfirm packaging/claude_usage.spec
       - name: Smoke test (the app starts and stays open)
         run: |
           "dist/Claude Usage.app/Contents/MacOS/Claude Usage" &

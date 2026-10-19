@@ -1,8 +1,8 @@
 """Draws the app icon (dark tile, usage gauge, spark) with no dependencies.
 
-Writes icon.png (256 px), icon.ico (16-256 px) and icon_mac.png (512 px, padded)
-next to this file, and the macOS app icon to Claude Usage.app/Contents/Resources/icon.icns.
-Run: python assets/make_icon.py
+Writes into assets/: icon.png (256 px), icon.ico (16-256 px, Windows),
+icon_mac.png (512 px, padded) and icon.icns (macOS app icon).
+Run: python packaging/make_icon.py
 """
 import math
 import struct
@@ -119,15 +119,13 @@ def icns(pngs):
 
 
 if __name__ == "__main__":
-    here = Path(__file__).parent
+    out = Path(__file__).resolve().parent.parent / "assets"
     images = [(s, png(s, render(s))) for s in (16, 24, 32, 48, 64, 128, 256)]
-    (here / "icon.png").write_bytes(images[-1][1])
-    (here / "icon.ico").write_bytes(ico(images))
+    (out / "icon.png").write_bytes(images[-1][1])
+    (out / "icon.ico").write_bytes(ico(images))
     # macOS: padded artwork; big sizes need fewer samples to stay fast
     mac = {s: png(s, render(s, samples=4 if s <= 256 else 2, pad=0.1))
            for s in {s for _, s in ICNS_TYPES}}
-    (here / "icon_mac.png").write_bytes(mac[512])
-    app_res = here.parent / "Claude Usage.app" / "Contents" / "Resources"
-    app_res.mkdir(parents=True, exist_ok=True)
-    (app_res / "icon.icns").write_bytes(icns(mac))
-    print("icon.png, icon.ico, icon_mac.png, Claude Usage.app/Contents/Resources/icon.icns written")
+    (out / "icon_mac.png").write_bytes(mac[512])
+    (out / "icon.icns").write_bytes(icns(mac))
+    print("assets/icon.png, icon.ico, icon_mac.png, icon.icns written")

@@ -1,4 +1,3 @@
-*/Contents/MacOS/* text eol=lf
 *.pyw text eol=lf
 *.bat text eol=crlf
 *.iss text eol=crlf

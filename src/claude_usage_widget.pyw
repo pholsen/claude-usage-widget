@@ -6,8 +6,9 @@ claude.ai > Settings > Usage. Data comes from the endpoint Claude Code's
 (Windows/Linux: ~/.claude/.credentials.json, macOS: Keychain).
 No estimates, no calibration.
 
-Run: Windows - double-click this file (.pyw opens no console).
-     macOS   - double-click "Claude Usage.app".
+Install: the Windows installer / macOS disk image from the GitHub releases page.
+From source: double-click this file on Windows (.pyw opens no console),
+or run: python3 src/claude_usage_widget.pyw
 Starts at the bottom-left of the main screen on every launch.
 Drag: left click + drag | Close: right click (Mac: ctrl + click) | Refresh now: double click
 Red dot at top-right: the last refresh failed, the value shown is stale.
@@ -40,8 +41,8 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-# in a PyInstaller build the assets are unpacked to sys._MEIPASS
-BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+# in a PyInstaller build the assets are unpacked to sys._MEIPASS, in the repo they sit next to src/
+BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent))
 ICON = BASE / "assets" / ("icon_mac.png" if IS_MAC else "icon.png")
 REFRESH_SECONDS = 60
 USAGE_URL = "https://api.anthropic.com/api/oauth/usage"
