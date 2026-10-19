@@ -40,7 +40,9 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-ICON = Path(__file__).resolve().parent / "assets" / ("icon_mac.png" if IS_MAC else "icon.png")
+# in a PyInstaller build the assets are unpacked to sys._MEIPASS
+BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+ICON = BASE / "assets" / ("icon_mac.png" if IS_MAC else "icon.png")
 REFRESH_SECONDS = 60
 USAGE_URL = "https://api.anthropic.com/api/oauth/usage"
 KEYCHAIN_SERVICE = "Claude Code-credentials"  # where Claude Code keeps its login on macOS

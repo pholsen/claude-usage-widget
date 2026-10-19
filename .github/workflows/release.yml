@@ -1,0 +1,95 @@
+# Builds the Windows installer and the macOS disk images.
+# Push a tag like v1.0.0 to publish them as a GitHub release;
+# "Run workflow" on the Actions tab only builds them (downloadable artifacts).
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  PYINSTALLER: pyinstaller==6.11.1
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then v="${GITHUB_REF_NAME#v}"; else v="0.0.0-dev"; fi
+          echo "APP_VERSION=$v" >> "$GITHUB_ENV"
+      - run: pip install ${{ env.PYINSTALLER }}
+      - run: pyinstaller --noconfirm claude_usage.spec
+      - name: Installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress; }
+          & $iscc "/DMyAppVersion=$env:APP_VERSION" installer\windows.iss
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/ClaudeUsage-Setup-*.exe
+
+  macos:
+    strategy:
+      matrix:
+        include:
+          - runner: macos-latest
+            arch: AppleSilicon
+          - runner: macos-15-intel
+            arch: Intel
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then v="${GITHUB_REF_NAME#v}"; else v="0.0.0-dev"; fi
+          echo "APP_VERSION=$v" >> "$GITHUB_ENV"
+      - run: pip install ${{ env.PYINSTALLER }}
+      - run: pyinstaller --noconfirm claude_usage.spec
+      - name: Disk image
+        run: |
+          mkdir dmg
+          cp -R "dist/Claude Usage.app" dmg/
+          ln -s /Applications dmg/Applications
+          hdiutil create -volname "Claude Usage" -srcfolder dmg -ov -format UDZO \
+            "dist/ClaudeUsage-$APP_VERSION-macOS-${{ matrix.arch }}.dmg"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.arch }}
+          path: dist/*.dmg
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" out/* --repo "$GITHUB_REPOSITORY" \
+            --title "Claude Usage $GITHUB_REF_NAME" --notes-file - <<'EOF'
+          **Windows:** download `ClaudeUsage-Setup-….exe` and run it.
+          **macOS:** download the `.dmg` for your Mac (Apple Silicon = M1/M2/M3/M4, Intel = older Macs), open it and drag **Claude Usage** to Applications.
+
+          The app is not signed yet, so Windows and macOS show a warning the first time. See [Install](https://github.com/pholsen/claude-usage-widget#install) for how to get past it.
+          EOF
