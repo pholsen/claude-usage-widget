@@ -7,7 +7,7 @@ claude.ai > Settings > Usage. Data comes from the endpoint Claude Code's
 No estimates, no calibration.
 
 Run: Windows - double-click this file (.pyw opens no console).
-     macOS   - double-click "Claude Usage.command".
+     macOS   - double-click "Claude Usage.app".
 Starts at the bottom-left of the main screen on every launch.
 Drag: left click + drag | Close: right click (Mac: ctrl + click) | Refresh now: double click
 Red dot at top-right: the last refresh failed, the value shown is stale.
@@ -40,7 +40,7 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-ICON = Path(__file__).resolve().parent / "assets" / "icon.png"
+ICON = Path(__file__).resolve().parent / "assets" / ("icon_mac.png" if IS_MAC else "icon.png")
 REFRESH_SECONDS = 60
 USAGE_URL = "https://api.anthropic.com/api/oauth/usage"
 KEYCHAIN_SERVICE = "Claude Code-credentials"  # where Claude Code keeps its login on macOS

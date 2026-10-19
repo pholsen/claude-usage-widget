@@ -29,19 +29,20 @@ It shows no estimates and needs no calibration. It refreshes every 60 seconds. Y
 
 **Windows:** double-click `Install (Windows).bat` once. It creates a **Claude Usage** shortcut with the widget icon on your Desktop and in the Start menu, and asks whether to start the widget with Windows. After that, open the widget from the shortcut. (Windows shows every `.pyw` file with the Python icon, so the icon only appears on the shortcut.) You can also just double-click `claude_usage_widget.pyw`; no console window opens.
 
-**macOS:** double-click `Claude Usage.command`. The first time, macOS asks whether `security` may read the `Claude Code-credentials` Keychain item. Choose **Always Allow**, otherwise it asks again on every refresh. If macOS blocks the file because it was downloaded, right-click it › Open, or run:
+**macOS:** double-click `Claude Usage.app`. The first time, macOS asks whether `security` may read the `Claude Code-credentials` Keychain item. Choose **Always Allow**, otherwise it asks again on every refresh. The app is unsigned, so if macOS says it can't be opened, right-click it › Open, or run:
 
 ```sh
-chmod +x "Claude Usage.command"
-xattr -d com.apple.quarantine "Claude Usage.command"
+xattr -dr com.apple.quarantine "Claude Usage.app"
 ```
+
+Keep `Claude Usage.app` in the same folder as `claude_usage_widget.pyw`; it starts the widget from there. To keep it at hand, drag it to the Dock instead of moving it to Applications.
 
 **Linux:** `python3 claude_usage_widget.pyw &`
 
 ### Start automatically
 
 - **Windows:** run `Install (Windows).bat` and answer **Y**.
-- **macOS:** System Settings › General › Login Items › add `Claude Usage.command`.
+- **macOS:** System Settings › General › Login Items › add `Claude Usage.app`.
 
 ## Controls
 
@@ -75,7 +76,7 @@ claude.ai › Ayarlar › Kullanım sayfasındaki **gerçek** oturum (5 saatlik)
 
 **Çalıştırma:**
 - **Windows:** `Install (Windows).bat` dosyasına bir kez çift tıkla. Masaüstüne ve Başlat menüsüne ikonlu **Claude Usage** kısayolu ekler, Windows açılışında başlasın mı diye sorar. Sonra widget'ı bu kısayoldan aç. (Windows her `.pyw` dosyasını Python ikonuyla gösterir; ikon yalnızca kısayolda görünür.)
-- **macOS:** `Claude Usage.command` dosyasına çift tıkla. İlk açılışta Anahtar Zinciri izni sorulur; **Her Zaman İzin Ver**'i seç, yoksa her yenilemede tekrar sorar. Dosya engellenirse sağ tık › Aç ile aç.
+- **macOS:** `Claude Usage.app` uygulamasına çift tıkla. İlk açılışta Anahtar Zinciri izni sorulur; **Her Zaman İzin Ver**'i seç, yoksa her yenilemede tekrar sorar. Uygulama imzasız olduğu için açılmazsa sağ tık › Aç ile aç. Uygulamayı `claude_usage_widget.pyw` ile aynı klasörde tut; el altında olsun istersen Uygulamalar'a taşımak yerine Dock'a sürükle.
 - **Linux:** `python3 claude_usage_widget.pyw &`
 
 **Kullanım:**

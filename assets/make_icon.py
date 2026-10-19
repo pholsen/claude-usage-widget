@@ -1,6 +1,7 @@
 """Draws the app icon (dark tile, usage gauge, spark) with no dependencies.
 
-Writes icon.png (256 px) and icon.ico (16-256 px) next to this file.
+Writes icon.png (256 px), icon.ico (16-256 px) and icon_mac.png (512 px, padded)
+next to this file, and the macOS app icon to Claude Usage.app/Contents/Resources/icon.icns.
 Run: python assets/make_icon.py
 """
 import math
@@ -63,8 +64,10 @@ def colour_at(x, y):
     return arc_colour(x, y) or BG
 
 
-def render(size, samples=4):
-    scale = 256 / size
+def render(size, samples=4, pad=0.0):
+    """pad: empty margin on each side as a fraction of the size (macOS icons leave ~10%)."""
+    scale = 256 / size / (1 - 2 * pad)
+    shift = 256 * pad * scale * size / 256
     rows = []
     for py in range(size):
         row = bytearray()
@@ -72,8 +75,8 @@ def render(size, samples=4):
             r = g = b = a = 0
             for sy in range(samples):
                 for sx in range(samples):
-                    c = colour_at((px + (sx + 0.5) / samples) * scale,
-                                  (py + (sy + 0.5) / samples) * scale)
+                    c = colour_at((px + (sx + 0.5) / samples) * scale - shift,
+                                  (py + (sy + 0.5) / samples) * scale - shift)
                     if c:
                         r, g, b, a = r + c[0], g + c[1], b + c[2], a + 1
             n = samples * samples
@@ -104,9 +107,27 @@ def ico(images):
     return header + entries + data
 
 
+ICNS_TYPES = [(b"icp4", 16), (b"icp5", 32), (b"icp6", 64), (b"ic07", 128), (b"ic08", 256),
+              (b"ic09", 512), (b"ic10", 1024), (b"ic11", 32), (b"ic12", 64), (b"ic13", 256),
+              (b"ic14", 512)]
+
+
+def icns(pngs):
+    """pngs: {size: png bytes}; a macOS .icns built from PNG entries."""
+    body = b"".join(kind + struct.pack(">I", 8 + len(pngs[s])) + pngs[s] for kind, s in ICNS_TYPES)
+    return b"icns" + struct.pack(">I", 8 + len(body)) + body
+
+
 if __name__ == "__main__":
     here = Path(__file__).parent
     images = [(s, png(s, render(s))) for s in (16, 24, 32, 48, 64, 128, 256)]
     (here / "icon.png").write_bytes(images[-1][1])
     (here / "icon.ico").write_bytes(ico(images))
-    print("icon.png, icon.ico written")
+    # macOS: padded artwork; big sizes need fewer samples to stay fast
+    mac = {s: png(s, render(s, samples=4 if s <= 256 else 2, pad=0.1))
+           for s in {s for _, s in ICNS_TYPES}}
+    (here / "icon_mac.png").write_bytes(mac[512])
+    app_res = here.parent / "Claude Usage.app" / "Contents" / "Resources"
+    app_res.mkdir(parents=True, exist_ok=True)
+    (app_res / "icon.icns").write_bytes(icns(mac))
+    print("icon.png, icon.ico, icon_mac.png, Claude Usage.app/Contents/Resources/icon.icns written")
