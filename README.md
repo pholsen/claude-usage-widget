@@ -97,7 +97,7 @@ Uygulama henüz imzalı olmadığı için ilk açılışta uyarı çıkar:
 
 ### Kaldırma
 
-- **Windows:** Başlat menüsü › Claude Usage › **Claude Usage Kaldır**, ya da Ayarlar › Uygulamalar › Yüklü uygulamalar › Claude Usage › Kaldır. Kısayollar da silinir.
+- **Windows:** Başlat menüsü › Claude Usage › **Claude Usage uygulamasını kaldır**, ya da Ayarlar › Uygulamalar › Yüklü uygulamalar › Claude Usage › Kaldır. Kısayollar da silinir.
 - **macOS:** Widget'ı kapat, sonra **Claude Usage**'ı Uygulamalar klasöründen Çöp Sepeti'ne sürükle. Giriş Öğeleri'ne eklediysen oradan da kaldır.
 
 Widget kendine ait bir ayar ya da veri saklamaz.
