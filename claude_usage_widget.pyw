@@ -40,6 +40,7 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
+ICON = Path(__file__).resolve().parent / "assets" / "icon.png"
 REFRESH_SECONDS = 60
 USAGE_URL = "https://api.anthropic.com/api/oauth/usage"
 KEYCHAIN_SERVICE = "Claude Code-credentials"  # where Claude Code keeps its login on macOS
@@ -243,6 +244,11 @@ class Widget:
         self.root = tk.Tk()
         r = self.root
         r.title("Claude usage")
+        try:  # Dock icon on macOS, window icon elsewhere
+            self.icon = tk.PhotoImage(file=str(ICON))
+            r.iconphoto(True, self.icon)
+        except tk.TclError:
+            pass
         r.overrideredirect(True)
         r.attributes("-topmost", True)
         clear = make_transparent(r)

@@ -1,3 +1,5 @@
+<img src="assets/icon.png" width="96" align="right" alt="icon">
+
 # Claude Usage Widget
 
 A tiny always-on-top desktop widget that shows your **real** Claude usage limits — the 5-hour session and the weekly limit — exactly as they appear on claude.ai › Settings › Usage. Works on **Windows, macOS and Linux**. Single Python file, no dependencies.
@@ -38,7 +40,7 @@ xattr -d com.apple.quarantine "Claude Usage.command"
 
 ### Start automatically
 
-- **Windows:** press `Win+R`, type `shell:startup`, and put a shortcut to `claude_usage_widget.pyw` in that folder.
+- **Windows:** press `Win+R`, type `shell:startup`, and put a shortcut to `claude_usage_widget.pyw` in that folder. To give the shortcut the widget's icon: right-click it › Properties › Change Icon › choose `assets/icon.ico`.
 - **macOS:** System Settings › General › Login Items › add `Claude Usage.command`.
 
 ## Controls
@@ -75,6 +77,8 @@ claude.ai › Ayarlar › Kullanım sayfasındaki **gerçek** oturum (5 saatlik)
 - **Windows:** `claude_usage_widget.pyw` dosyasına çift tıkla.
 - **macOS:** `Claude Usage.command` dosyasına çift tıkla. İlk açılışta Anahtar Zinciri izni sorulur; **Her Zaman İzin Ver**'i seç, yoksa her yenilemede tekrar sorar. Dosya engellenirse sağ tık › Aç ile aç.
 - **Linux:** `python3 claude_usage_widget.pyw &`
+
+Windows'ta kısayola ikon vermek için: kısayola sağ tık › Özellikler › Simge Değiştir › `assets/icon.ico`.
 
 **Kullanım:**
 - Taşımak için sol tıkla sürükle.
