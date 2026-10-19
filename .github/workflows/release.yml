@@ -18,8 +18,8 @@ jobs:
   windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - name: Version
@@ -36,7 +36,7 @@ jobs:
           if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress; }
           & $iscc "/DMyAppVersion=$env:APP_VERSION" installer\windows.iss
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: windows
           path: dist/ClaudeUsage-Setup-*.exe
@@ -51,8 +51,8 @@ jobs:
             arch: Intel
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - name: Version
@@ -61,6 +61,13 @@ jobs:
           echo "APP_VERSION=$v" >> "$GITHUB_ENV"
       - run: pip install ${{ env.PYINSTALLER }}
       - run: pyinstaller --noconfirm claude_usage.spec
+      - name: Smoke test (the app starts and stays open)
+        run: |
+          "dist/Claude Usage.app/Contents/MacOS/Claude Usage" &
+          pid=$!
+          sleep 6
+          kill -0 "$pid"
+          kill "$pid"
       - name: Disk image
         run: |
           mkdir dmg
@@ -68,7 +75,7 @@ jobs:
           ln -s /Applications dmg/Applications
           hdiutil create -volname "Claude Usage" -srcfolder dmg -ov -format UDZO \
             "dist/ClaudeUsage-$APP_VERSION-macOS-${{ matrix.arch }}.dmg"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: macos-${{ matrix.arch }}
           path: dist/*.dmg
@@ -78,7 +85,7 @@ jobs:
     needs: [windows, macos]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           path: out
           merge-multiple: true
