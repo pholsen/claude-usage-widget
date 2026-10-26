@@ -45,6 +45,7 @@ from pathlib import Path
 BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent))
 ICON = BASE / "assets" / ("icon_mac.png" if IS_MAC else "icon.png")
 REFRESH_SECONDS = 60
+MAX_BACKOFF_SECONDS = 900  # longest wait after repeated 429s
 USAGE_URL = "https://api.anthropic.com/api/oauth/usage"
 KEYCHAIN_SERVICE = "Claude Code-credentials"  # where Claude Code keeps its login on macOS
 
@@ -62,14 +63,14 @@ STRINGS = {
         "session": "Session", "week": "Week", "no_session": "no active session",
         "loading": "Loading…", "no_login": "Not logged in to Claude Code",
         "unauthorized": "Open Claude Code once", "server": "Server error {}",
-        "offline": "No internet", "pct": "{}%",
+        "rate_limited": "Rate limited, retrying in {}m", "offline": "No internet", "pct": "{}%",
         "days": "{d}d {h}h", "hours": "{h}h {m}m",
     },
     "tr": {
         "session": "Oturum", "week": "Hafta", "no_session": "aktif oturum yok",
         "loading": "Yükleniyor…", "no_login": "Claude Code girişi yok",
         "unauthorized": "Claude Code'u bir kez aç", "server": "Sunucu hatası {}",
-        "offline": "İnternet yok", "pct": "%{}",
+        "rate_limited": "İstek sınırı, {} dk sonra denenecek", "offline": "İnternet yok", "pct": "%{}",
         "days": "{d}g {h}sa", "hours": "{h}sa {m}dk",
     },
 }
@@ -146,6 +147,12 @@ def access_token():
     return None
 
 
+class RateLimited(RuntimeError):
+    def __init__(self, wait):
+        self.wait = wait
+        super().__init__(T["rate_limited"].format(max(1, round(wait / 60))))
+
+
 def fetch_usage():
     token = access_token()
     if not token:
@@ -161,6 +168,12 @@ def fetch_usage():
     except urllib.error.HTTPError as e:
         if e.code == 401:
             raise RuntimeError(T["unauthorized"])
+        if e.code == 429:
+            try:
+                wait = int(e.headers.get("Retry-After", ""))
+            except ValueError:
+                wait = 0
+            raise RateLimited(wait)
         raise RuntimeError(T["server"].format(e.code))
     except urllib.error.URLError:
         raise RuntimeError(T["offline"])
@@ -274,6 +287,7 @@ class Widget:
         self.data = None   # last successful response
         self.error = None  # error of the last refresh
         self.after_id = None
+        self.limited = 0   # consecutive 429s
         self.refresh()
 
     # --- dragging ---
@@ -319,17 +333,42 @@ class Widget:
     def refresh(self):
         if self.after_id:
             self.root.after_cancel(self.after_id)
+        delay = REFRESH_SECONDS
         try:
             self.data = fetch_usage()
             self.error = None
+            self.limited = 0
+        except RateLimited as ex:  # back off: honour Retry-After, otherwise double the wait each time
+            self.limited += 1
+            delay = min(max(ex.wait, REFRESH_SECONDS * 2 ** self.limited), MAX_BACKOFF_SECONDS)
+            self.error = T["rate_limited"].format(max(1, round(delay / 60)))
         except Exception as ex:  # keep the widget alive and the last known value on screen
             self.error = str(ex)
         self.redraw()
-        self.after_id = self.root.after(REFRESH_SECONDS * 1000, self.refresh)
+        self.after_id = self.root.after(delay * 1000, self.refresh)
 
     def run(self):
         self.root.mainloop()
 
 
+def already_running():
+    """True if another widget of this user is up (a second one would double the API calls)."""
+    if IS_WIN:
+        global _mutex  # keep the handle alive for the life of the process
+        _mutex = ctypes.windll.kernel32.CreateMutexW(None, False, "ClaudeUsageWidgetSingleton")
+        return ctypes.windll.kernel32.GetLastError() == 183  # ERROR_ALREADY_EXISTS
+    try:
+        import fcntl
+        global _lock_file
+        _lock_file = open(Path.home() / ".claude_usage_widget.lock", "w")
+        fcntl.flock(_lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        return True
+    except (ImportError, OSError):
+        pass
+    return False
+
+
 if __name__ == "__main__":
-    Widget().run()
+    if not already_running():
+        Widget().run()
